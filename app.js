@@ -248,6 +248,16 @@ function updateDashboard() {
   document.getElementById('percent-badge').textContent = `${percentage.toFixed(1)}%`;
   document.getElementById('main-progress-bar').style.width = `${percentage}%`;
 
+  // Atualiza Valores da Folha de Impressão
+  const printSaved = document.getElementById('print-saved');
+  const printPercent = document.getElementById('print-percent');
+  const printRemaining = document.getElementById('print-remaining');
+  const printCount = document.getElementById('print-count');
+  if (printSaved) printSaved.textContent = `R$ ${formatCurrency(totalSaved)}`;
+  if (printPercent) printPercent.textContent = `${percentage.toFixed(1)}%`;
+  if (printRemaining) printRemaining.textContent = `R$ ${formatCurrency(remaining)}`;
+  if (printCount) printCount.textContent = `${countSaved} / ${TOTAL_ITEMS}`;
+
   // Atualiza Badges de Filtros
   document.getElementById('tab-all-count').textContent = TOTAL_ITEMS;
   document.getElementById('tab-pending-count').textContent = TOTAL_ITEMS - countSaved;
@@ -709,10 +719,29 @@ function setupBackupAndModals() {
     e.target.value = '';
   });
 
-  // Imprimir Folha Física
+  // Imprimir Folha Física (Garante os 500 números visíveis na folha)
   btnPrint.addEventListener('click', () => {
     modal.classList.add('hidden');
-    window.print();
+    const previousStatus = appState.currentStatusFilter;
+    const previousRange = appState.currentRangeFilter;
+    const previousSearch = appState.searchTerm;
+
+    // Reseta temporariamente para renderizar todos os 500 números na folha
+    appState.currentStatusFilter = 'all';
+    appState.currentRangeFilter = 'all';
+    appState.searchTerm = '';
+    renderGrid();
+
+    // Abre janela de impressão
+    setTimeout(() => {
+      window.print();
+
+      // Restaura filtros anteriores
+      appState.currentStatusFilter = previousStatus;
+      appState.currentRangeFilter = previousRange;
+      appState.searchTerm = previousSearch;
+      renderGrid();
+    }, 100);
   });
 
   // Resetar Tudo
