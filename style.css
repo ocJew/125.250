@@ -763,12 +763,12 @@ button {
 
 .numbers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(25, 1fr);
+  gap: 6px;
 }
 
 .num-cell {
-  height: 58px;
+  height: 52px;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -1246,25 +1246,33 @@ button {
 }
 
 /* ==========================================================
-   RESPONSIVIDADE
+   RESPONSIVIDADE (DIVISORES EXATOS DE 500 PARA RETÂNGULO PERFEITO)
    ========================================================== */
+@media (max-width: 1280px) {
+  .numbers-grid {
+    grid-template-columns: repeat(20, 1fr);
+    gap: 6px;
+  }
+}
+
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 640px) {
-  .header-brand h1 {
-    font-size: 1.4rem;
-  }
-
-  .hero-amount {
-    font-size: 2.2rem;
-  }
 
   .numbers-grid {
-    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    grid-template-columns: repeat(20, 1fr);
+    gap: 5px;
+  }
+
+  .num-cell {
+    height: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .numbers-grid {
+    grid-template-columns: repeat(10, 1fr);
     gap: 6px;
   }
 
@@ -1273,7 +1281,7 @@ button {
   }
 
   .num-val {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .grid-controls-section {
@@ -1291,5 +1299,32 @@ button {
 
   .milestones-bar {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .header-brand h1 {
+    font-size: 1.35rem;
+  }
+
+  .hero-amount {
+    font-size: 2.2rem;
+  }
+
+  .numbers-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .num-cell {
+    height: 48px;
+  }
+
+  .num-val {
+    font-size: 0.85rem;
+  }
+
+  .milestones-bar {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
