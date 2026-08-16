@@ -967,151 +967,241 @@ button {
   opacity: 0.7;
 }
 
-.print-only {
-  display: none;
-}
-
 /* ==========================================================
-   ESTILO DE IMPRESSÃO PROFISSIONAL (FOLHA A4 FÍSICA)
+   ESTILO DE IMPRESSÃO MESCLADO (MENU V1 + CHECKS V2 EM 1 PÁGINA A4)
    ========================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 5mm 8mm;
+  }
+
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
   body {
     background: #FFFFFF !important;
-    color: #111111 !important;
+    color: #18181B !important;
     background-image: none !important;
-    font-size: 11pt;
+    font-size: 9pt;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  .main-header,
-  .dashboard-grid,
+  /* Oculta apenas ferramentas interativas */
+  .header-actions,
+  .card-tool,
+  .card-simulator,
   .grid-controls-section,
-  .milestones-bar,
-  .main-footer,
   #confetti-canvas,
   .toast,
   .modal-overlay,
-  .no-results {
+  .no-results,
+  .main-footer {
     display: none !important;
-  }
-
-  .print-only {
-    display: block !important;
   }
 
   .app-container {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    gap: 10px !important;
+    gap: 6px !important;
   }
 
-  /* Cabeçalho da Folha de Impressão */
-  .print-header-sheet {
-    border: 1.5px solid #222222;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 10px;
+  /* Cabeçalho da Primeira Versão */
+  .main-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 2px !important;
+    border-bottom: 1.5px solid #18181B !important;
+  }
+
+  .brand-icon {
+    display: none !important;
+  }
+
+  .header-brand h1 {
+    font-size: 15pt !important;
+    color: #18181B !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+  }
+
+  .header-brand h1 span {
+    -webkit-text-fill-color: #18181B !important;
+    color: #18181B !important;
+  }
+
+  .subtitle {
+    font-size: 8pt !important;
+    color: #52525B !important;
+    margin-top: 1px !important;
+  }
+
+  /* Dashboard / Menu Card Hero da Primeira Versão */
+  .dashboard-grid {
+    display: block !important;
+    margin-bottom: 4px !important;
+  }
+
+  .card-hero {
     background: #FAFAFA !important;
+    border: 1px solid #D4D4D8 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin: 0 !important;
   }
 
-  .print-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #DDDDDD;
-    padding-bottom: 6px;
-    margin-bottom: 6px;
+  .card-hero-glow {
+    display: none !important;
   }
 
-  .print-title-row h2 {
-    font-size: 13pt;
-    font-weight: 800;
-    color: #000000;
-    letter-spacing: -0.3px;
+  .hero-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 2px !important;
   }
 
-  .print-meta-badge {
-    font-size: 10pt;
-    font-weight: 700;
-    background: #222222 !important;
-    color: #FFFFFF !important;
-    padding: 3px 10px;
-    border-radius: 4px;
+  .badge-tag {
+    font-size: 7pt !important;
+    font-weight: 700 !important;
+    color: #047857 !important;
+    background: #E6F4EA !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
   }
 
-  .print-stats-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 8.5pt;
-    color: #333333;
-    padding-bottom: 6px;
-    border-bottom: 1px dashed #CCCCCC;
-    margin-bottom: 6px;
+  .percent-badge {
+    font-size: 11pt !important;
+    font-weight: 800 !important;
+    color: #B45309 !important;
   }
 
-  .print-stats-row strong {
-    color: #000000;
+  .hero-amount-wrapper {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 4px !important;
+    margin: 2px 0 1px !important;
   }
 
-  .print-legend-row {
-    display: flex;
-    gap: 20px;
-    font-size: 8pt;
-    color: #444444;
+  .hero-amount-wrapper .currency {
+    font-size: 11pt !important;
+    font-weight: 600 !important;
+    color: #52525B !important;
   }
 
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .hero-amount {
+    font-size: 18pt !important;
+    font-weight: 800 !important;
+    color: #18181B !important;
+    line-height: 1 !important;
   }
 
-  .legend-box {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 14px;
-    height: 14px;
-    border: 1px solid #333333;
-    border-radius: 2px;
-    font-size: 8pt;
-    font-weight: bold;
+  .hero-target {
+    font-size: 7.5pt !important;
+    color: #71717A !important;
+    margin-bottom: 6px !important;
   }
 
-  .legend-box.pending {
-    background: #FFFFFF !important;
+  .hero-target strong {
+    color: #18181B !important;
   }
 
-  .legend-box.done {
-    background: #111111 !important;
-    color: #FFFFFF !important;
+  .progress-bar-container {
+    height: 6px !important;
+    background: #E4E4E7 !important;
+    border-radius: 3px !important;
+    margin-bottom: 8px !important;
+    overflow: hidden !important;
   }
 
-  /* Grade dos 500 Números */
+  .progress-bar-fill {
+    height: 100% !important;
+    background: #059669 !important;
+    border-radius: 3px !important;
+  }
+
+  .hero-footer-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    padding-top: 6px !important;
+    border-top: 1px solid #E4E4E7 !important;
+  }
+
+  .hero-footer-stats .label {
+    font-size: 6.8pt !important;
+    color: #71717A !important;
+    margin-bottom: 1px !important;
+  }
+
+  .hero-footer-stats strong {
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    color: #18181B !important;
+  }
+
+  /* Marcos de Progresso */
+  .milestones-bar {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 4px !important;
+    background: #FAFAFA !important;
+    border: 1px solid #E4E4E7 !important;
+    border-radius: 6px !important;
+    padding: 5px 8px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .milestone-step {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    font-size: 7pt !important;
+    color: #71717A !important;
+  }
+
+  .ms-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #D4D4D8 !important;
+  }
+
+  .milestone-step.reached {
+    color: #047857 !important;
+    font-weight: 700 !important;
+  }
+
+  .milestone-step.reached .ms-dot {
+    background: #047857 !important;
+  }
+
+  /* Grade dos 500 Números com CHECKS da Versão 2 */
   .numbers-grid-container {
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
-    box-shadow: none !important;
+    margin: 0 !important;
   }
 
   .numbers-grid {
     display: grid !important;
     grid-template-columns: repeat(25, 1fr) !important;
-    gap: 2px !important;
+    gap: 2.5px !important;
   }
 
   .num-cell {
-    height: 38px !important;
+    height: 25px !important;
     background: #FFFFFF !important;
-    border: 1px solid #666666 !important;
+    border: 1px solid #A1A1AA !important;
     border-radius: 3px !important;
     padding: 0 !important;
     display: flex !important;
@@ -1119,13 +1209,12 @@ button {
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
-    box-shadow: none !important;
   }
 
   .num-val {
     font-size: 7.5pt !important;
     font-weight: 700 !important;
-    color: #000000 !important;
+    color: #18181B !important;
     line-height: 1 !important;
   }
 
@@ -1133,9 +1222,9 @@ button {
     display: none !important;
   }
 
-  /* Células Já Guardadas (Alto Destaque na Impressão) */
+  /* Estado Concluído (Checks Estilo V2: Fundo Escuro, Texto Branco e Checkmark Verde/Branco) */
   .num-cell.saved {
-    background: #1A1A1A !important;
+    background: #18181B !important;
     border-color: #000000 !important;
   }
 
@@ -1151,8 +1240,8 @@ button {
     right: 2px !important;
     font-size: 6pt !important;
     font-weight: 900 !important;
-    color: #4ADE80 !important;
-    background: transparent !important;
+    color: #22C55E !important;
+    line-height: 1 !important;
   }
 }
 
