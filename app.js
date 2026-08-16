@@ -196,14 +196,25 @@ function loadSavedData() {
       const parsed = JSON.parse(raw);
       // Suporte a formato novo { savedNumbers, startDate, depositFrequency } ou antigo { "1": "..." }
       if (parsed && typeof parsed === 'object') {
-        if (parsed.savedNumbers) {
+        if (parsed.savedNumbers && typeof parsed.savedNumbers === 'object') {
           appState.savedNumbers = parsed.savedNumbers;
           if (parsed.startDate) appState.startDate = parsed.startDate;
           if (parsed.depositFrequency) appState.depositFrequency = parsed.depositFrequency;
         } else {
-          appState.savedNumbers = parsed;
+          // Formato legado
+          const clean = {};
+          Object.keys(parsed).forEach(k => {
+            if (!isNaN(parseInt(k, 10))) {
+              clean[k] = parsed[k];
+            }
+          });
+          appState.savedNumbers = clean;
         }
       }
+    }
+
+    if (!appState.savedNumbers || typeof appState.savedNumbers !== 'object') {
+      appState.savedNumbers = {};
     }
 
     const savedStartDate = localStorage.getItem(START_DATE_KEY);
@@ -325,126 +336,155 @@ function updateMilestones(percentage) {
   });
 }
 
-const START_DATE_KEY = 'desafio_125250_start_date';
+function getValidDateFromString(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date();
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return new Date();
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+  if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1900 || year > 2200 || month < 1 || month > 12 || day < 1 || day > 31) {
+    return new Date();
+  }
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+  return isNaN(date.getTime()) ? new Date() : date;
+}
 
 function calculateEndDate() {
-  const startDateInput = document.getElementById('start-date-input');
-  const freqSelect = document.getElementById('freq-select');
-  const dateDisplay = document.getElementById('finish-date-display');
-  const durationDisplay = document.getElementById('finish-duration-display');
-  const currentDayBadge = document.getElementById('current-day-badge');
-  const journeyStatusText = document.getElementById('journey-status-text');
+  try {
+    const startDateInput = document.getElementById('start-date-input');
+    const freqSelect = document.getElementById('freq-select');
+    const dateDisplay = document.getElementById('finish-date-display');
+    const durationDisplay = document.getElementById('finish-duration-display');
+    const currentDayBadge = document.getElementById('current-day-badge');
+    const journeyStatusText = document.getElementById('journey-status-text');
 
-  // Inicializa com valor salvo ou hoje se estiver vazio
-  if (!startDateInput.value) {
-    if (appState.startDate) {
-      startDateInput.value = appState.startDate;
-    } else {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      startDateInput.value = `${year}-${month}-${day}`;
-    }
-  }
+    if (!startDateInput) return;
 
-  if (appState.depositFrequency && freqSelect) {
-    freqSelect.value = appState.depositFrequency;
-  }
-
-  // Atualiza estado e salva
-  appState.startDate = startDateInput.value;
-  if (freqSelect) appState.depositFrequency = freqSelect.value;
-  persistData();
-
-  const [startYear, startMonth, startDay] = startDateInput.value.split('-').map(Number);
-  const startDate = new Date(startYear, startMonth - 1, startDay);
-  startDate.setHours(0, 0, 0, 0);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Diferença em dias entre hoje e a data de início
-  const msPerDay = 1000 * 60 * 60 * 24;
-  const diffTime = today.getTime() - startDate.getTime();
-  const diffDays = Math.round(diffTime / msPerDay);
-
-  const countSaved = Object.keys(appState.savedNumbers).length;
-  const remaining = TOTAL_ITEMS - countSaved;
-
-  // Atualização do Contador do Dia Atual
-  if (diffDays < 0) {
-    const daysUntilStart = Math.abs(diffDays);
-    currentDayBadge.textContent = `Inicia em ${daysUntilStart} ${daysUntilStart === 1 ? 'dia' : 'dias'}`;
-    journeyStatusText.textContent = `Seu desafio começará em ${startDate.toLocaleDateString('pt-BR')}.`;
-  } else {
-    const currentDay = diffDays + 1; // Dia 1 no primeiro dia, Dia 16 se começou há 15 dias
-    currentDayBadge.textContent = `Dia ${currentDay} da jornada`;
-
-    if (diffDays === 0) {
-      journeyStatusText.textContent = `🎉 Hoje é o seu 1º dia de desafio! Você já guardou ${countSaved} de 500.`;
-    } else {
-      if (countSaved >= currentDay) {
-        journeyStatusText.textContent = `🚀 Excelente! Você está no Dia ${currentDay} e já guardou ${countSaved} depósitos (${countSaved - currentDay} acima da meta diária).`;
+    // Se o input estiver vazio ou inválido, pega do appState ou hoje
+    let val = startDateInput.value ? startDateInput.value.trim() : '';
+    if (!val) {
+      if (appState.startDate && appState.startDate.includes('-')) {
+        val = appState.startDate;
+        startDateInput.value = val;
       } else {
-        const behind = currentDay - countSaved;
-        journeyStatusText.textContent = `📅 Você está no Dia ${currentDay} da jornada e guardou ${countSaved} depósitos (${behind} para igualar aos dias corridos).`;
+        const todayObj = new Date();
+        const y = todayObj.getFullYear();
+        const m = String(todayObj.getMonth() + 1).padStart(2, '0');
+        const d = String(todayObj.getDate()).padStart(2, '0');
+        val = `${y}-${m}-${d}`;
+        startDateInput.value = val;
       }
     }
+
+    if (appState.depositFrequency && freqSelect) {
+      freqSelect.value = appState.depositFrequency;
+    }
+
+    // Atualiza estado e salva
+    appState.startDate = val;
+    if (freqSelect) appState.depositFrequency = freqSelect.value;
+    persistData();
+
+    const startDate = getValidDateFromString(val);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Diferença em dias entre hoje e a data de início
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const diffTime = today.getTime() - startDate.getTime();
+    const diffDays = Math.round(diffTime / msPerDay);
+
+    const countSaved = Object.keys(appState.savedNumbers || {}).length;
+    const remaining = Math.max(0, TOTAL_ITEMS - countSaved);
+
+    // Atualização do Contador do Dia Atual
+    if (currentDayBadge && journeyStatusText) {
+      if (isNaN(diffDays)) {
+        currentDayBadge.textContent = 'Dia 1 da jornada';
+        journeyStatusText.textContent = 'Acompanhe seus depósitos diários!';
+      } else if (diffDays < 0) {
+        const daysUntilStart = Math.abs(diffDays);
+        currentDayBadge.textContent = `Inicia em ${daysUntilStart} ${daysUntilStart === 1 ? 'dia' : 'dias'}`;
+        journeyStatusText.textContent = `Seu desafio começará em ${startDate.toLocaleDateString('pt-BR')}.`;
+      } else {
+        const currentDay = diffDays + 1;
+        currentDayBadge.textContent = `Dia ${currentDay} da jornada`;
+
+        if (diffDays === 0) {
+          journeyStatusText.textContent = `🎉 Hoje é o seu 1º dia de desafio! Você já guardou ${countSaved} de 500.`;
+        } else {
+          if (countSaved >= currentDay) {
+            journeyStatusText.textContent = `🚀 Excelente! Você está no Dia ${currentDay} e já guardou ${countSaved} depósitos (${countSaved - currentDay} acima da meta diária).`;
+          } else {
+            const behind = currentDay - countSaved;
+            journeyStatusText.textContent = `📅 Você está no Dia ${currentDay} da jornada e guardou ${countSaved} depósitos (${behind} para igualar aos dias corridos).`;
+          }
+        }
+      }
+    }
+
+    if (remaining === 0) {
+      if (dateDisplay) dateDisplay.textContent = '🎉 Meta Atingida!';
+      if (durationDisplay) durationDisplay.textContent = 'Você já completou todos os 500 depósitos!';
+      if (currentDayBadge) currentDayBadge.textContent = '🏆 Desafio Concluído!';
+      return;
+    }
+
+    const freq = freqSelect ? freqSelect.value : '1d';
+    let totalDaysNeeded = 0;
+
+    if (freq === '1d') {
+      totalDaysNeeded = remaining;
+    } else if (freq === '5w') {
+      totalDaysNeeded = Math.ceil((remaining / 5) * 7);
+    } else if (freq === '3w') {
+      totalDaysNeeded = Math.ceil((remaining / 3) * 7);
+    } else if (freq === '2w') {
+      totalDaysNeeded = Math.ceil((remaining / 2) * 7);
+    } else if (freq === '1w') {
+      totalDaysNeeded = remaining * 7;
+    } else {
+      totalDaysNeeded = remaining;
+    }
+
+    // Previsão baseada no momento atual para completar o restante
+    const baseDate = (isNaN(diffDays) || diffDays < 0) ? startDate : today;
+    const targetDate = new Date(baseDate.getTime());
+    targetDate.setDate(targetDate.getDate() + totalDaysNeeded);
+
+    let formattedDate = 'Calculando...';
+    try {
+      formattedDate = targetDate.toLocaleDateString('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (err) {
+      formattedDate = targetDate.toDateString();
+    }
+
+    if (dateDisplay) dateDisplay.textContent = formattedDate;
+
+    // Cálculo amigável de duração restante
+    const years = Math.floor(totalDaysNeeded / 365);
+    const remainingDaysAfterYears = totalDaysNeeded % 365;
+    const months = Math.floor(remainingDaysAfterYears / 30);
+    const days = remainingDaysAfterYears % 30;
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'ano' : 'anos'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'mês' : 'meses'}`);
+    if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`);
+
+    if (durationDisplay) {
+      durationDisplay.textContent = `Faltam ${remaining} depósitos (~${totalDaysNeeded} dias corridos / ${parts.join(', ')})`;
+    }
+  } catch (globalCalcError) {
+    console.warn('Aviso no cálculo de datas:', globalCalcError);
   }
-
-  if (remaining === 0) {
-    dateDisplay.textContent = '🎉 Meta Atingida!';
-    durationDisplay.textContent = 'Você já completou todos os 500 depósitos!';
-    currentDayBadge.textContent = '🏆 Desafio Concluído!';
-    return;
-  }
-
-  const freq = freqSelect ? freqSelect.value : '1d';
-  let totalDaysNeeded = 0;
-
-  if (freq === '1d') {
-    // 1 depósito por dia
-    totalDaysNeeded = remaining;
-  } else if (freq === '5w') {
-    // 5 depósitos por semana (Seg a Sex)
-    totalDaysNeeded = Math.ceil((remaining / 5) * 7);
-  } else if (freq === '3w') {
-    // 3 depósitos por semana
-    totalDaysNeeded = Math.ceil((remaining / 3) * 7);
-  } else if (freq === '2w') {
-    // 2 depósitos por semana
-    totalDaysNeeded = Math.ceil((remaining / 2) * 7);
-  } else if (freq === '1w') {
-    // 1 depósito por semana
-    totalDaysNeeded = remaining * 7;
-  }
-
-  // Previsão baseada no momento atual para completar o restante
-  const baseDate = diffDays < 0 ? startDate : today;
-  const targetDate = new Date(baseDate.getTime());
-  targetDate.setDate(targetDate.getDate() + totalDaysNeeded);
-
-  const formattedDate = targetDate.toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
-
-  dateDisplay.textContent = formattedDate;
-
-  // Cálculo amigável de duração restante
-  const years = Math.floor(totalDaysNeeded / 365);
-  const remainingDaysAfterYears = totalDaysNeeded % 365;
-  const months = Math.floor(remainingDaysAfterYears / 30);
-  const days = remainingDaysAfterYears % 30;
-
-  const parts = [];
-  if (years > 0) parts.push(`${years} ${years === 1 ? 'ano' : 'anos'}`);
-  if (months > 0) parts.push(`${months} ${months === 1 ? 'mês' : 'meses'}`);
-  if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`);
-
-  durationDisplay.textContent = `Faltam ${remaining} depósitos (~${totalDaysNeeded} dias corridos / ${parts.join(', ')})`;
 }
 
 // ==========================================================
