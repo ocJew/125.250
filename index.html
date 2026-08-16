@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desafio dos R$ 125.250 | Rumo à Liberdade Financeira</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Canvas para Confetes -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-container">
+    <!-- Cabeçalho -->
+    <header class="main-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Desafio dos <span>R$ 125.250</span></h1>
+          <p class="subtitle">Guarde de R$ 1 a R$ 500 no seu ritmo e alcance sua meta</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-sound-toggle" class="btn-icon" title="Ativar/Desativar Sons" aria-label="Sons">
+          <svg id="sound-icon-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          </svg>
+        </button>
+
+        <button id="btn-backup-menu" class="btn-secondary" title="Gerenciar Dados e Backup">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          <span>Backup</span>
+        </button>
+
+        <button id="btn-reset" class="btn-outline-danger" title="Reiniciar todo o progresso">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          <span>Resetar</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Modal de Backup -->
+    <div id="backup-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Gerenciador de Dados & Backup</h3>
+          <button id="modal-close" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Seus dados são salvos automaticamente no seu navegador. Você pode baixar uma cópia de segurança para não perder o progresso.</p>
+          <div class="backup-actions">
+            <button id="btn-export-json" class="btn-primary full-width">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+              Exportar Arquivo de Backup (.json)
+            </button>
+            <label class="btn-secondary full-width file-input-label">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              Importar Backup
+              <input type="file" id="input-import-json" accept=".json" class="hidden">
+            </label>
+            <button id="btn-print" class="btn-secondary full-width">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+              Imprimir Folha de Acompanhamento
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <section class="dashboard-grid">
+      <!-- Card Principal de Valor -->
+      <div class="card card-hero">
+        <div class="card-hero-glow"></div>
+        <div class="hero-top">
+          <span class="badge-tag">Total Acumulado</span>
+          <span id="percent-badge" class="percent-badge">0.0%</span>
+        </div>
+        
+        <div class="hero-amount-wrapper">
+          <span class="currency">R$</span>
+          <h2 id="total-saved" class="hero-amount">0,00</h2>
+        </div>
+
+        <div class="hero-target">
+          Meta Final: <strong>R$ 125.250,00</strong> (500 depósitos)
+        </div>
+
+        <div class="progress-bar-container">
+          <div id="main-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+
+        <div class="hero-footer-stats">
+          <div>
+            <span class="label">Restante</span>
+            <strong id="total-remaining">R$ 125.250,00</strong>
+          </div>
+          <div>
+            <span class="label">Concluídos</span>
+            <strong id="count-saved">0 / 500</strong>
+          </div>
+          <div>
+            <span class="label">Média por Depósito</span>
+            <strong id="avg-saved">R$ 0,00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card de Destaque & Sorteador do Dia -->
+      <div class="card card-tool">
+        <div class="card-header-simple">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m10 15 5-3-5-3v6Z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>Sorteador do Dia</h3>
+            <p>Não sabe qual guardar hoje? Deixe a sorte escolher!</p>
+          </div>
+        </div>
+
+        <div class="roulette-box">
+          <div class="roulette-display">
+            <span class="roulette-prefix">R$</span>
+            <span id="roulette-number">---</span>
+          </div>
+          <p id="roulette-message" class="roulette-hint">Escolha a intensidade e sorteie seu valor!</p>
+        </div>
+
+        <div class="roulette-controls">
+          <select id="roulette-tier" class="custom-select">
+            <option value="any">Qualquer valor pendente (R$ 1 a 500)</option>
+            <option value="low">Valores leves (R$ 1 a 100)</option>
+            <option value="mid">Valores moderados (R$ 101 a 300)</option>
+            <option value="high">Valores ousados (R$ 301 a 500)</option>
+          </select>
+          <div class="roulette-buttons">
+            <button id="btn-spin" class="btn-primary btn-spin">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              Sortear
+            </button>
+            <button id="btn-mark-roulette" class="btn-success hidden" title="Marcar este número como pago">
+              ✓ Marcar como Guardado
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card de Previsão / Ritmo & Data de Término -->
+      <div class="card card-simulator">
+        <div class="card-header-simple">
+          <div class="tool-icon icon-emerald">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div>
+            <h3>Previsão de Término</h3>
+            <p>Descubra o dia exato que você terá os R$ 125.250</p>
+          </div>
+        </div>
+
+        <div class="pace-selector-wrapper">
+          <div class="input-date-group">
+            <label for="start-date-input">Data de Início:</label>
+            <input type="date" id="start-date-input" class="custom-date-input">
+          </div>
+          <div class="input-date-group">
+            <label for="freq-select">Frequência de depósitos:</label>
+            <select id="freq-select" class="custom-select">
+              <option value="1d">1 por dia (500 dias)</option>
+              <option value="5w">5 por semana (Seg a Sex)</option>
+              <option value="3w">3 por semana</option>
+              <option value="2w">2 por semana</option>
+              <option value="1w">1 por semana</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pace-result-box">
+          <span class="result-label">Você alcançará os R$ 125.250 em:</span>
+          <strong id="finish-date-display" class="result-date">29 de Dezembro de 2027</strong>
+          <span id="finish-duration-display" class="result-duration">Faltam 500 dias (1 ano, 4 meses e 13 dias)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barra de Ferramentas e Filtros da Grade -->
+    <section class="grid-controls-section">
+      <div class="controls-left">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="number" id="search-input" min="1" max="500" placeholder="Buscar valor ex: 250...">
+          <button id="btn-clear-search" class="clear-btn hidden">&times;</button>
+        </div>
+
+        <!-- Filtros de Status -->
+        <div class="filter-tabs">
+          <button class="tab-btn active" data-status="all">Todos <span class="tab-badge" id="tab-all-count">500</span></button>
+          <button class="tab-btn" data-status="pending">Pendentes <span class="tab-badge" id="tab-pending-count">500</span></button>
+          <button class="tab-btn" data-status="done">Guardados <span class="tab-badge" id="tab-done-count">0</span></button>
+        </div>
+      </div>
+
+      <!-- Filtro de Faixa de Valores -->
+      <div class="controls-right">
+        <div class="range-selector">
+          <span class="range-label">Faixa:</span>
+          <div class="range-chips">
+            <button class="chip-btn active" data-range="all">Todas</button>
+            <button class="chip-btn" data-range="1-100">1 - 100</button>
+            <button class="chip-btn" data-range="101-200">101 - 200</button>
+            <button class="chip-btn" data-range="201-300">201 - 300</button>
+            <button class="chip-btn" data-range="301-400">301 - 400</button>
+            <button class="chip-btn" data-range="401-500">401 - 500</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Indicador de Marcos de Progresso -->
+    <div class="milestones-bar">
+      <div class="milestone-step" id="ms-10"><span>10% (R$ 12.5k)</span><div class="ms-dot"></div></div>
+      <div class="milestone-step" id="ms-25"><span>25% (R$ 31.3k)</span><div class="ms-dot"></div></div>
+      <div class="milestone-step" id="ms-50"><span>50% (R$ 62.6k)</span><div class="ms-dot"></div></div>
+      <div class="milestone-step" id="ms-75"><span>75% (R$ 93.9k)</span><div class="ms-dot"></div></div>
+      <div class="milestone-step" id="ms-100"><span>100% (R$ 125.2k)</span><div class="ms-dot"></div></div>
+    </div>
+
+    <!-- Grade Principal de Números (1 a 500) -->
+    <main class="numbers-grid-container">
+      <div id="numbers-grid" class="numbers-grid">
+        <!-- Renderizado dinamicamente via JS (1 a 500) -->
+      </div>
+      
+      <div id="no-results" class="no-results hidden">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <h4>Nenhum valor encontrado</h4>
+        <p>Tente ajustar os filtros ou limpar a pesquisa.</p>
+      </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="main-footer">
+      <p>💡 <strong>Dica:</strong> A ordem dos valores não importa. Em dias mais apertados, guarde valores menores (ex: R$ 5, R$ 12); quando sobrar um dinheiro extra, liquide os maiores (ex: R$ 450, R$ 500)!</p>
+      <p class="copyright">Desafio dos R$ 125.250 &bull; Soma de Gauss: (500 &times; 501) / 2 = R$ 125.250,00</p>
+    </footer>
+  </div>
+
+  <!-- Notificação Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
