@@ -196,7 +196,10 @@
 
         <div class="pace-selector-wrapper">
           <div class="input-date-group">
-            <label for="start-date-input">Data de Início:</label>
+            <div class="date-label-row">
+              <label for="start-date-input">Data de Início:</label>
+              <span id="current-day-badge" class="current-day-badge">Dia 1 da jornada</span>
+            </div>
             <input type="date" id="start-date-input" class="custom-date-input">
           </div>
           <div class="input-date-group">
@@ -214,7 +217,10 @@
         <div class="pace-result-box">
           <span class="result-label">Você alcançará os R$ 125.250 em:</span>
           <strong id="finish-date-display" class="result-date">29 de Dezembro de 2027</strong>
-          <span id="finish-duration-display" class="result-duration">Faltam 500 dias (1 ano, 4 meses e 13 dias)</span>
+          <span id="finish-duration-display" class="result-duration">Faltam 500 dias</span>
+          <div id="journey-status-banner" class="journey-status-banner">
+            <span id="journey-status-text">Hoje é o seu 1º dia de desafio!</span>
+          </div>
         </div>
       </div>
     </section>

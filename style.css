@@ -485,13 +485,29 @@ button {
 .input-date-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.date-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .input-date-group label {
   font-size: 0.78rem;
   color: var(--text-dim);
   font-weight: 600;
+}
+
+.current-day-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold-400);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
 }
 
 .custom-date-input {
@@ -537,6 +553,20 @@ button {
 .result-duration {
   font-size: 0.75rem;
   color: var(--text-dim);
+}
+
+.journey-status-banner {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+#journey-status-text {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: block;
 }
 
 /* ==========================================================

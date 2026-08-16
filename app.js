@@ -287,26 +287,73 @@ function updateMilestones(percentage) {
   });
 }
 
+const START_DATE_KEY = 'desafio_125250_start_date';
+
 function calculateEndDate() {
   const startDateInput = document.getElementById('start-date-input');
   const freqSelect = document.getElementById('freq-select');
   const dateDisplay = document.getElementById('finish-date-display');
   const durationDisplay = document.getElementById('finish-duration-display');
+  const currentDayBadge = document.getElementById('current-day-badge');
+  const journeyStatusText = document.getElementById('journey-status-text');
 
+  // Recupera data salva ou usa hoje como padrão
   if (!startDateInput.value) {
-    const today = new Date();
-    startDateInput.value = today.toISOString().split('T')[0];
+    const savedStartDate = localStorage.getItem(START_DATE_KEY);
+    if (savedStartDate) {
+      startDateInput.value = savedStartDate;
+    } else {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      startDateInput.value = `${year}-${month}-${day}`;
+    }
   }
 
-  const [year, month, day] = startDateInput.value.split('-').map(Number);
-  const startDate = new Date(year, month - 1, day);
+  // Persiste a data de início
+  localStorage.setItem(START_DATE_KEY, startDateInput.value);
+
+  const [startYear, startMonth, startDay] = startDateInput.value.split('-').map(Number);
+  const startDate = new Date(startYear, startMonth - 1, startDay);
+  startDate.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Diferença em dias entre hoje e a data de início
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const diffTime = today.getTime() - startDate.getTime();
+  const diffDays = Math.round(diffTime / msPerDay);
 
   const countSaved = Object.keys(appState.savedNumbers).length;
   const remaining = TOTAL_ITEMS - countSaved;
 
+  // Atualização do Contador do Dia Atual
+  if (diffDays < 0) {
+    const daysUntilStart = Math.abs(diffDays);
+    currentDayBadge.textContent = `Inicia em ${daysUntilStart} ${daysUntilStart === 1 ? 'dia' : 'dias'}`;
+    journeyStatusText.textContent = `Seu desafio começará em ${startDate.toLocaleDateString('pt-BR')}.`;
+  } else {
+    const currentDay = diffDays + 1; // Dia 1 no primeiro dia, Dia 16 se começou há 15 dias
+    currentDayBadge.textContent = `Dia ${currentDay} da jornada`;
+
+    if (diffDays === 0) {
+      journeyStatusText.textContent = `🎉 Hoje é o seu 1º dia de desafio! Você já guardou ${countSaved} de 500.`;
+    } else {
+      if (countSaved >= currentDay) {
+        journeyStatusText.textContent = `🚀 Excelente! Você está no Dia ${currentDay} e já guardou ${countSaved} depósitos (${countSaved - currentDay} acima da meta diária).`;
+      } else {
+        const behind = currentDay - countSaved;
+        journeyStatusText.textContent = `📅 Você está no Dia ${currentDay} da jornada e guardou ${countSaved} depósitos (${behind} para igualar aos dias corridos).`;
+      }
+    }
+  }
+
   if (remaining === 0) {
     dateDisplay.textContent = '🎉 Meta Atingida!';
     durationDisplay.textContent = 'Você já completou todos os 500 depósitos!';
+    currentDayBadge.textContent = '🏆 Desafio Concluído!';
     return;
   }
 
@@ -317,7 +364,7 @@ function calculateEndDate() {
     // 1 depósito por dia
     totalDaysNeeded = remaining;
   } else if (freq === '5w') {
-    // 5 depósitos por semana (Seg a Sex -> 5 a cada 7 dias)
+    // 5 depósitos por semana (Seg a Sex)
     totalDaysNeeded = Math.ceil((remaining / 5) * 7);
   } else if (freq === '3w') {
     // 3 depósitos por semana
@@ -330,7 +377,9 @@ function calculateEndDate() {
     totalDaysNeeded = remaining * 7;
   }
 
-  const targetDate = new Date(startDate.getTime());
+  // Previsão baseada no momento atual para completar o restante
+  const baseDate = diffDays < 0 ? startDate : today;
+  const targetDate = new Date(baseDate.getTime());
   targetDate.setDate(targetDate.getDate() + totalDaysNeeded);
 
   const formattedDate = targetDate.toLocaleDateString('pt-BR', {
@@ -341,7 +390,7 @@ function calculateEndDate() {
 
   dateDisplay.textContent = formattedDate;
 
-  // Cálculo amigável de duração (anos, meses, dias)
+  // Cálculo amigável de duração restante
   const years = Math.floor(totalDaysNeeded / 365);
   const remainingDaysAfterYears = totalDaysNeeded % 365;
   const months = Math.floor(remainingDaysAfterYears / 30);
