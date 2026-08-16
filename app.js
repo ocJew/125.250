@@ -5,12 +5,16 @@
 
 const STORAGE_KEY = 'desafio_125250_data_v1';
 const SOUND_SETTING_KEY = 'desafio_125250_sound_enabled';
+const START_DATE_KEY = 'desafio_125250_start_date';
+const FREQ_KEY = 'desafio_125250_frequency';
 const TOTAL_ITEMS = 500;
 const TARGET_TOTAL = (TOTAL_ITEMS * (TOTAL_ITEMS + 1)) / 2; // R$ 125.250,00
 
 // Estado da Aplicação
 let appState = {
   savedNumbers: {}, // Formato: { "1": "2026-08-16T12:00:00.000Z", "2": ... }
+  startDate: '',
+  depositFrequency: '1d',
   soundEnabled: localStorage.getItem(SOUND_SETTING_KEY) !== 'false',
   currentStatusFilter: 'all', // 'all' | 'pending' | 'done'
   currentRangeFilter: 'all',  // 'all' | '1-100' | '101-200' ...
@@ -189,8 +193,24 @@ function loadSavedData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      appState.savedNumbers = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      // Suporte a formato novo { savedNumbers, startDate, depositFrequency } ou antigo { "1": "..." }
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.savedNumbers) {
+          appState.savedNumbers = parsed.savedNumbers;
+          if (parsed.startDate) appState.startDate = parsed.startDate;
+          if (parsed.depositFrequency) appState.depositFrequency = parsed.depositFrequency;
+        } else {
+          appState.savedNumbers = parsed;
+        }
+      }
     }
+
+    const savedStartDate = localStorage.getItem(START_DATE_KEY);
+    if (savedStartDate) appState.startDate = savedStartDate;
+
+    const savedFreq = localStorage.getItem(FREQ_KEY);
+    if (savedFreq) appState.depositFrequency = savedFreq;
   } catch (e) {
     console.error('Erro ao carregar dados:', e);
     appState.savedNumbers = {};
@@ -199,7 +219,15 @@ function loadSavedData() {
 
 function persistData() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.savedNumbers));
+    const payload = {
+      version: 1,
+      startDate: appState.startDate,
+      depositFrequency: appState.depositFrequency,
+      savedNumbers: appState.savedNumbers
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    if (appState.startDate) localStorage.setItem(START_DATE_KEY, appState.startDate);
+    if (appState.depositFrequency) localStorage.setItem(FREQ_KEY, appState.depositFrequency);
   } catch (e) {
     console.error('Erro ao salvar dados:', e);
     showToast('Erro ao salvar no armazenamento local');
@@ -307,11 +335,10 @@ function calculateEndDate() {
   const currentDayBadge = document.getElementById('current-day-badge');
   const journeyStatusText = document.getElementById('journey-status-text');
 
-  // Recupera data salva ou usa hoje como padrão
+  // Inicializa com valor salvo ou hoje se estiver vazio
   if (!startDateInput.value) {
-    const savedStartDate = localStorage.getItem(START_DATE_KEY);
-    if (savedStartDate) {
-      startDateInput.value = savedStartDate;
+    if (appState.startDate) {
+      startDateInput.value = appState.startDate;
     } else {
       const today = new Date();
       const year = today.getFullYear();
@@ -321,8 +348,14 @@ function calculateEndDate() {
     }
   }
 
-  // Persiste a data de início
-  localStorage.setItem(START_DATE_KEY, startDateInput.value);
+  if (appState.depositFrequency && freqSelect) {
+    freqSelect.value = appState.depositFrequency;
+  }
+
+  // Atualiza estado e salva
+  appState.startDate = startDateInput.value;
+  if (freqSelect) appState.depositFrequency = freqSelect.value;
+  persistData();
 
   const [startYear, startMonth, startDay] = startDateInput.value.split('-').map(Number);
   const startDate = new Date(startYear, startMonth - 1, startDay);
@@ -367,7 +400,7 @@ function calculateEndDate() {
     return;
   }
 
-  const freq = freqSelect.value;
+  const freq = freqSelect ? freqSelect.value : '1d';
   let totalDaysNeeded = 0;
 
   if (freq === '1d') {
@@ -681,7 +714,14 @@ function setupBackupAndModals() {
 
   // Exportar JSON
   btnExport.addEventListener('click', () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState.savedNumbers, null, 2));
+    const backupData = {
+      version: 1,
+      exportDate: new Date().toISOString(),
+      startDate: appState.startDate,
+      depositFrequency: appState.depositFrequency,
+      savedNumbers: appState.savedNumbers
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     const today = new Date().toISOString().slice(0, 10);
     downloadAnchor.setAttribute("href", dataStr);
@@ -702,10 +742,26 @@ function setupBackupAndModals() {
       try {
         const parsed = JSON.parse(event.target.result);
         if (typeof parsed === 'object' && parsed !== null) {
-          appState.savedNumbers = parsed;
+          if (parsed.savedNumbers) {
+            appState.savedNumbers = parsed.savedNumbers;
+            if (parsed.startDate) {
+              appState.startDate = parsed.startDate;
+              const dateInput = document.getElementById('start-date-input');
+              if (dateInput) dateInput.value = parsed.startDate;
+            }
+            if (parsed.depositFrequency) {
+              appState.depositFrequency = parsed.depositFrequency;
+              const freqSelect = document.getElementById('freq-select');
+              if (freqSelect) freqSelect.value = parsed.depositFrequency;
+            }
+          } else {
+            appState.savedNumbers = parsed;
+          }
+
           persistData();
           updateDashboard();
           renderGrid();
+          calculateEndDate();
           modal.classList.add('hidden');
           showToast('Backup restaurado com sucesso! 🎉');
         } else {
@@ -774,6 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const startDateInput = document.getElementById('start-date-input');
   const freqSelect = document.getElementById('freq-select');
   if (startDateInput && freqSelect) {
+    startDateInput.addEventListener('input', calculateEndDate);
     startDateInput.addEventListener('change', calculateEndDate);
     freqSelect.addEventListener('change', calculateEndDate);
   }
